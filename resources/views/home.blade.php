@@ -26,7 +26,7 @@
 {{-- Hero --}}
 <section class="grid items-center gap-10 rounded-[2rem] bg-ink-800 px-6 py-12 text-white md:grid-cols-12 md:px-14 md:py-16">
     <div class="md:col-span-7">
-        <h1 class="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl">Lihat dulu jam konselor yang kosong, baru pesan sesinya</h1>
+        <h1 class="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl">Lihat dulu, baru pesan sesinya</h1>
         <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-100">
             Ceritakan masalah Anda, pilih konselor terdaftar, lalu pilih tanggal di kalender yang menandai slot kosong, sebagian terisi, dan penuh. Konselor menerima permintaan itu dan mengonfirmasinya sesuai jadwal mereka.
         </p>

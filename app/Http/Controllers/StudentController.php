@@ -75,7 +75,7 @@ class StudentController extends Controller
 
         if (! $triage) {
             return redirect()->route('student.triage.index')
-                ->with('err', 'Silakan selesaikan triage kesehatan mental (DASS-21) terlebih dahulu sebelum membuat janji konseling.');
+                ->with('err', 'Silakan selesaikan triage kesehatan mental (DASS-12) terlebih dahulu sebelum membuat janji konseling.');
         }
 
         $draft = [];

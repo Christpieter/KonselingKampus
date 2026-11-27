@@ -18,20 +18,20 @@ class TriageChatController extends Controller
     private const AI_CONTEXT_MESSAGES = 40;
 
     private const SYSTEM_PROMPT = <<<'PROMPT'
-    Kamu adalah asisten triage kesehatan mental untuk mahasiswa sebelum sesi konseling. Tugasmu: mengajukan 10 pertanyaan secara naratif/percakapan (bukan format kuesioner kaku) untuk memahami kondisi emosional mahasiswa.
+    Kamu adalah asisten triage kesehatan mental untuk mahasiswa sebelum sesi konseling. Tugasmu: mengajukan 10 pertanyaan secara naratif/percakapan (bukan format kuesioner kaku) dan kosakata yang benar untuk memahami kondisi emosional mahasiswa.
 
     ATURAN UTAMA:
-    1. Gunakan bahasa Indonesia yang hangat, empatik, dan tidak menghakimi.
+    1. Gunakan bahasa Indonesia berdasarkan KBBI yang hangat, empatik, dan tidak menghakimi.
     2. JANGAN mendiagnosis, memberi label klinis, atau menyarankan pengobatan.
-    3. Ajukan SATU pertanyaan per balasan. Tunggu jawaban mahasiswa sebelum lanjut.
-    4. Pertanyaan harus terasa alami dalam percakapan, bukan daftar tanya jawab.
-    5. Setelah 10 pertanyaan terjawab, ringkas dan akhiri dengan: "TRIAGE_SELESAI" di akhir pesan.
-    6. Jika mahasiswa menyebut bahaya diri/ orang lain SEKARANG: hentikan, sarankan hubungi darurat/ orang tepercaya SEKARANG, jangan tunggu AI.
-    7. Jangan minta data identitas (nama lengkap, NIM, alamat, telepon).
-    8. SETIAP pertanyaan HARUS disertakan opsi jawaban berangka di akhir:
-       "(Jawab: 0=Tidak pernah, 1=Beberapa hari, 2=Lebih dari separuh hari, 3=Hampir setiap hari)"
-    9. Jika mahasiswa menjawab di luar skala (bukan 0-3), tanya ulang dengan lembut: "Coba jawab dengan: 0=Tidak pernah, 1=Beberapa hari, 2=Lebih dari separuh hari, 3=Hampir setiap hari."
-    10. Ikuti penanda [SISTEM] di akhir prompt untuk mengetahui pertanyaan nomor berapa yang harus diajukan sekarang. Jangan mengulang pertanyaan yang sudah dijawab.
+    3. Selalu berikan pertanyaan yang bisa dijawab dengan jawaban  0 = Tidak pernah · 1 = Beberapa hari · 2 = Lebih dari separuh hari · 3 = Hampir setiap hari. tapi jangan tampilkan dalam chat.
+    4. Ajukan SATU pertanyaan per balasan. Tunggu jawaban mahasiswa sebelum lanjut.
+    5. Pertanyaan harus terasa alami dalam percakapan, bukan daftar tanya jawab dan tetap masuk akal.
+    6. Setelah 10 pertanyaan terjawab, ringkas dan akhiri dengan: "TRIAGE_SELESAI" di akhir pesan.
+    7. Jika mahasiswa menyebut bahaya diri/ orang lain SEKARANG: hentikan, sarankan hubungi darurat/ orang tepercaya SEKARANG, jangan tunggu AI.
+    8. Jangan minta data identitas (nama lengkap, NIM, alamat, telepon).
+    9. Skala jawaban sudah ditampilkan sekali di layar percakapan. Jangan mengulang angka, label skala, atau instruksi format jawaban dalam setiap balasan.
+    10. Mahasiswa dapat menjawab dengan angka 0-3 atau label jawaban yang tertulis pada skala. Jika jawabannya tidak cocok dengan pilihan mana pun, minta klarifikasi singkat tanpa menyalin seluruh skala.
+    11. Ikuti penanda [SISTEM] di akhir prompt untuk mengetahui pertanyaan nomor berapa yang harus diajukan sekarang. Jangan mengulang pertanyaan yang sudah dijawab.
 
     URUTAN PERTANYAAN (10 item, 3 subskala):
     KECEMASAN (3): 1) Gelisah/kegugupan, 2) Jantung berdebar/napas sesak, 3) Takut/cemas tanpa alasan jelas
@@ -158,6 +158,11 @@ class TriageChatController extends Controller
         // Marker TRIAGE_SELESAI dari AI diabaikan: penyelesaian hanya ditentukan
         // oleh jumlah jawaban valid di server (lihat blok "Jawaban ke-10" di atas).
         $reply = trim(str_ireplace('TRIAGE_SELESAI', '', $reply));
+        $reply = trim((string) preg_replace(
+            '/\s*\(?\s*jawab\s*:\s*0\s*=\s*tidak\s+pernah\s*,\s*1\s*=\s*beberapa\s+hari\s*,\s*2\s*=\s*lebih\s+dari\s+separuh\s+hari\s*,\s*3\s*=\s*hampir\s+setiap\s+hari\s*\)?\s*$/iu',
+            '',
+            $reply
+        ));
 
         if ($reply === '') {
             return response()->json(['message' => 'Asisten mengirim jawaban kosong. Coba lagi nanti.'], 502);
@@ -316,12 +321,29 @@ class TriageChatController extends Controller
     /**
      * Parser tunggal untuk jawaban 0-3. Dipakai oleh penghitung DAN ekstraktor
      * supaya keduanya selalu konsisten.
-     * Menerima: "2", " 2 ", "Jawab: 2", "jawab 2", "jawab=2".
+     * Menerima angka 0-3 atau label skala, dengan atau tanpa awalan "jawab".
      */
     private function parseAnswer(string $content): ?int
     {
-        if (preg_match('/^\s*(?:jawab\s*[:=]?\s*)?([0-3])\s*$/i', $content, $m)) {
-            return (int) $m[1];
+        $normalized = mb_strtolower(trim($content));
+        $normalized = preg_replace('/^jawab\s*[:=]?\s*/u', '', $normalized);
+        $normalized = trim($normalized, " \t\n\r\0\x0B.,!?;:\"'()[]{}");
+
+        if (preg_match('/^[0-3]$/', $normalized)) {
+            return (int) $normalized;
+        }
+
+        $textAnswers = [
+            0 => ['tidak pernah'],
+            1 => ['beberapa hari'],
+            2 => ['lebih dari separuh hari', 'lebih dari setengah hari'],
+            3 => ['hampir setiap hari'],
+        ];
+
+        foreach ($textAnswers as $score => $labels) {
+            if (in_array($normalized, $labels, true)) {
+                return $score;
+            }
         }
 
         return null;

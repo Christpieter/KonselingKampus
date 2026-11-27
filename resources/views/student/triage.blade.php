@@ -41,6 +41,15 @@
             </div>
         </div>
 
+        <div class="border-b border-ink-100 bg-amber-50 px-5 py-3 text-sm text-amber-950" role="note">
+            <strong>Panduan jawaban:</strong>
+            0 = Tidak pernah &middot;
+            1 = Beberapa hari &middot;
+            2 = Lebih dari separuh hari &middot;
+            3 = Hampir setiap hari.
+            Anda boleh menjawab dengan angka atau teks pilihan.
+        </div>
+
         <div id="chat-log" class="max-h-[55vh] min-h-64 space-y-3 overflow-y-auto bg-paper/60 px-4 py-5 md:px-6" role="log" aria-live="polite" aria-relevant="additions text">
             <div class="flex justify-start">
                 <p class="max-w-[85%] rounded-2xl rounded-bl-sm border border-ink-100 bg-white px-4 py-3 text-sm leading-relaxed text-ink-900">
@@ -48,8 +57,7 @@
                     Kita akan bicara sebentar tentang perasaan Anda dua minggu terakhir.
                     Jawab jujur ya—tidak ada jawaban salah. Mulai dari yang pertama:
                     <br><br>
-                    <strong>Seperti apa rasa gelisah atau kegugupan Anda akhir-akhir ini?</strong>
-                    (Jawab: 0=Tidak pernah, 1=Beberapa hari, 2=Lebih dari separuh hari, 3=Hampir setiap hari)
+                    <strong>Apakah ada rasa gelisah atau kegugupan Anda akhir-akhir ini?</strong>
                 </p>
             </div>
         </div>

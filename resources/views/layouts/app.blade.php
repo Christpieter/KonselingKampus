@@ -57,7 +57,7 @@
             <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="11" cy="15" r="9" fill="#43438F"/><circle cx="19" cy="15" r="9" fill="#98CC91" fill-opacity=".9"/></svg>
             Konseling Kampus
         </a>
-        <a href="{{ route('counselors.index') }}" class="{{ request()->routeIs('counselors.*') ? 'text-ink-900 underline decoration-2 underline-offset-8' : 'text-slate-600 hover:text-ink-900' }}">Daftar konselor</a>
+        <a href="{{ route('counselors.index') }}" class="{{ request()->routeIs('counselors.*') ? 'text-ink-900 underline decoration-2 underline-offset-8' : 'text-slate-600 hover:text-ink-900' }}">Lihat daftar konselor</a>
         <span class="flex-1"></span>
         @auth
             @if(auth()->user()->isStudent())
@@ -89,8 +89,7 @@
                 </div>
             </details>
         @else
-            <a href="{{ route('login') }}" class="text-slate-600 hover:text-ink-900">Masuk</a>
-            <a href="{{ route('register.student') }}" class="btn btn-primary">Daftar mahasiswa</a>
+            <a href="{{ route('login') }}" class="btn btn-primary">Masuk</a>
         @endauth
     </nav>
 </header>

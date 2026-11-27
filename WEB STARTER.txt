@@ -1,0 +1,24 @@
+z{rxYnbjWupn0i!J
+
+pw konseling domainesia
+
+demote-unmatched-slingshot.ngrok-free.dev
+ domain ngrok
+
+3MBGHsuqwDyUzzvZJKetaESfoq5_4rs7TzaqsGSNtDFiQHzvW
+auth key ngrok
+
+docker run -it --rm -e NGROK_AUTHTOKEN=3MBGHsuqwDyUzzvZJKetaESfoq5_4rs7TzaqsGSNtDFiQHzvW ngrok/ngrok:latest http --url=demote-unmatched-slingshot.ngrok-free.dev host.docker.internal:5678
+
+$env:WEBHOOK_URL="https://demote-unmatched-slingshot.ngrok-free.dev/"
+
+ngrok config add-authtoken 3MBGHsuqwDyUzzvZJKetaESfoq5_4rs7TzaqsGSNtDFiQHzvW
+
+
+BIAR FEATURE N8N BISA DI AKSES DI WEB
+n8n start
+&
+ngrok start:
+ngrok http --url=demote-unmatched-slingshot.ngrok-free.dev 5678
+
+

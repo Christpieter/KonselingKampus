@@ -2,19 +2,6 @@
 @section('title', 'Konseling Kampus')
 @section('content')
 @php
-    // Kalender contoh untuk hero. Datanya ilustrasi, bukan jadwal konselor sungguhan.
-    $m = now()->addMonthNoOverflow()->startOfMonth();
-    $lead = $m->dayOfWeekIso - 1;
-    $pattern = ['available', 'partial', 'available', 'full', 'partial', 'available', 'full', 'available'];
-    $demo = [];
-    for ($d = 1; $d <= $m->daysInMonth; $d++) {
-        $demo[$d] = $m->copy()->day($d)->dayOfWeekIso >= 6 ? 'none' : $pattern[($d * 3) % count($pattern)];
-    }
-    $pick = collect($demo)->filter(fn ($s, $d) => $d >= 10 && $s === 'partial')->keys()->first();
-    $demoStyle = ['available' => 'bg-sage-100 text-sage-900', 'partial' => 'bg-butter-100 text-butter-900', 'full' => 'bg-rose-100 text-rose-800', 'none' => 'text-slate-300'];
-    $demoLabel = ['available' => 'kosong', 'partial' => 'sebagian', 'full' => 'penuh', 'none' => ''];
-
-    // Angka platform
     $done = (int) ($byStatus['completed'] ?? 0);
     $booked = (int) ($byStatus['confirmed'] ?? 0);
     $waiting = (int) ($byStatus['pending'] ?? 0);
@@ -23,56 +10,30 @@
     $maxType = (int) ($byType->max('total') ?? 1);
 @endphp
 
-{{-- Hero --}}
-<section class="grid items-center gap-10 rounded-[2rem] bg-ink-800 px-6 py-12 text-white md:grid-cols-12 md:px-14 md:py-16">
-    <div class="md:col-span-7">
-        <h1 class="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl">Lihat dulu, baru pesan sesinya</h1>
-        <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-100">
-            Ceritakan masalah Anda, pilih konselor terdaftar, lalu pilih tanggal di kalender yang menandai slot kosong, sebagian terisi, dan penuh. Konselor menerima permintaan itu dan mengonfirmasinya sesuai jadwal mereka.
+<section class="relative overflow-hidden rounded-[2rem] bg-ink-800 px-6 py-14 text-white md:px-14 md:py-20">
+    <div class="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-sage-300/20 blur-3xl" aria-hidden="true"></div>
+    <div class="relative max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-sage-200">Untuk kamu, apa pun yang sedang kamu rasakan</p>
+        <h1 class="mt-5 font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">Kamu tidak harus melewati semuanya sendirian.</h1>
+        <p class="mt-6 max-w-2xl text-lg leading-relaxed text-ink-100">
+            Ada hari ketika tugas, relasi, masa depan, atau rasa lelah datang bersamaan. Kamu tak perlu punya semua jawabannya sekarang. Mulai saja dengan memberi ruang pada dirimu untuk didengar.
         </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ route('student.booking.start') }}" class="btn border-white bg-white text-ink-900 hover:bg-ink-50">Mulai konseling</a>
-            <a href="#cara-kerja" class="btn border-ink-400 bg-transparent text-white hover:bg-ink-700">Bagaimana alurnya?</a>
-        </div>
-    </div>
-
-    <div class="relative md:col-span-5">
-        <div class="rounded-3xl bg-white p-5 text-ink-900 shadow-2xl shadow-ink-900/40 md:rotate-[1.5deg]">
-            <div class="flex items-baseline justify-between">
-                <div class="font-display text-lg font-bold">{{ $m->locale('id')->translatedFormat('F Y') }}</div>
-                <div class="text-xs text-slate-500">Contoh tampilan kalender</div>
-            </div>
-            <div class="mt-3 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400">
-                @foreach(['Sen','Sel','Rab','Kam','Jum','Sab','Min'] as $d)<div>{{ $d }}</div>@endforeach
-            </div>
-            <div class="mt-1 grid grid-cols-7 gap-1">
-                @for($i = 0; $i < $lead; $i++)<div></div>@endfor
-                @foreach($demo as $d => $st)
-                    <div class="cal-in rounded-lg py-1.5 text-center {{ $demoStyle[$st] }} {{ $d === $pick ? 'ring-2 ring-ink-800 ring-offset-1' : '' }}" style="animation-delay: {{ $d * 22 }}ms">
-                        <div class="font-display text-sm font-bold leading-4">{{ $d }}</div>
-                        <div class="h-2.5 text-[8px] leading-[10px]">{{ $demoLabel[$st] }}</div>
-                    </div>
-                @endforeach
-            </div>
-            @if($pick)
-                <div class="mt-4 border-t border-ink-100 pt-3">
-                    <div class="mb-2 text-xs font-semibold text-slate-500">Jam pada tanggal {{ $pick }}</div>
-                    <div class="grid grid-cols-3 gap-2 text-center text-sm">
-                        <div class="rounded-lg bg-sage-100 py-1.5 font-semibold text-sage-900">09.00</div>
-                        <div class="rounded-lg bg-ink-50 py-1.5 text-slate-400 line-through">10.00</div>
-                        <div class="rounded-lg bg-sage-100 py-1.5 font-semibold text-sage-900">13.00</div>
-                    </div>
-                </div>
-            @endif
-        </div>
-        <div class="mt-4 rounded-2xl bg-butter-100 p-4 text-sm text-butter-900 shadow-lg md:absolute md:-bottom-8 md:-left-10 md:mt-0 md:w-60">
-            <div class="font-display font-bold">Konselor disetujui admin</div>
-            <p class="mt-1 text-butter-900/80">Profil baru tampil di daftar setelah admin memeriksa pendaftarannya.</p>
-        </div>
+        <a href="#bergabung" class="btn mt-8 border-white bg-white text-ink-900 hover:bg-ink-50">Temukan langkah pertamamu</a>
     </div>
 </section>
 
-{{-- Angka platform (data nyata dari database) --}}
+<section class="mx-auto mt-20 max-w-3xl text-center">
+    <p class="font-display text-2xl font-semibold leading-relaxed text-ink-800 md:text-3xl">
+        “Kamu boleh datang dengan cerita yang belum selesai, perasaan yang belum punya nama, atau hanya keinginan untuk bercerita.”
+    </p>
+    <p class="mx-auto mt-6 max-w-2xl leading-relaxed text-slate-600">
+        Apa yang kamu rasakan tetap berarti, sekecil atau sebesar apa pun. Mengulurkan tangan bukan tanda lemah, itu bentuk perhatian pada diri sendiri.
+    </p>
+</section>
+
+
+
+{{-- Statistik platform --}}
 <section class="mt-20" aria-labelledby="angka">
     <h2 id="angka" class="text-3xl font-bold">Angka di platform ini</h2>
     <p class="mt-2 text-slate-600">Dihitung langsung dari data yang ada saat halaman dibuka.</p>
@@ -125,92 +86,36 @@
     </div>
 </section>
 
-{{-- Yang ada di platform --}}
-<section class="mt-20" aria-labelledby="fitur">
-    <h2 id="fitur" class="text-3xl font-bold">Yang Anda dapat di sini</h2>
-    <div class="mt-6 grid gap-4 md:grid-cols-12">
-        <div class="rounded-3xl bg-ink-900 p-8 text-white md:col-span-7">
-            <h3 class="text-2xl font-bold text-white">Cerita yang hanya dibaca konselor pilihan Anda</h3>
-            <p class="mt-3 max-w-lg leading-relaxed text-ink-200">Cerita singkat dan jawaban kuesioner tampil pada konselor yang Anda pilih. Admin melihat daftar sesi, tanggal, dan statusnya, tanpa isi cerita.</p>
-        </div>
-        <div class="card md:col-span-5">
-            <h3 class="text-xl font-bold">Jadwal yang kelihatan</h3>
-            <p class="mt-2 leading-relaxed text-slate-600">Setiap tanggal di kalender ditandai kosong, sebagian terisi, atau penuh. Anda tahu jam mana yang masih bisa dipilih sebelum mengirim permintaan.</p>
-        </div>
-        <div class="card md:col-span-5">
-            <h3 class="text-xl font-bold">Rating dari mahasiswa</h3>
-            <p class="mt-2 leading-relaxed text-slate-600">Setelah sesi selesai, mahasiswa memberi bintang 1 sampai 5 dan komentar. Rata-ratanya tampil di profil konselor.</p>
-            @if($topCounselors->isNotEmpty())
-                <div class="mt-5 flex items-center">
-                    @foreach($topCounselors as $c)
-                        <span class="-ml-2 first:ml-0 rounded-full ring-2 ring-white">@include('partials.avatar', ['name' => $c->user->name, 'size' => 'h-10 w-10 text-sm'])</span>
-                    @endforeach
-                    <a href="{{ route('counselors.index') }}" class="ml-4 text-sm font-semibold text-ink-700 underline underline-offset-4">Lihat {{ $counselorCount }} konselor</a>
-                </div>
-            @endif
-        </div>
-        <div class="rounded-3xl bg-sage-100 p-8 md:col-span-7">
-            <h3 class="text-2xl font-bold text-sage-900">Latar belakang konselor yang terbuka</h3>
-            <p class="mt-3 max-w-lg leading-relaxed text-sage-900/80">Profil memuat bidang lulusan, pendidikan terakhir, keahlian, dan daftar sertifikasi, sehingga Anda bisa menimbang siapa yang paling cocok untuk masalah Anda. Pendaftar konselor diperiksa admin sebelum tampil.</p>
-        </div>
-    </div>
-</section>
-
-{{-- Cara kerja --}}
-<section id="cara-kerja" class="mt-20 grid scroll-mt-24 gap-12 md:grid-cols-12">
-    <div class="md:col-span-7">
-        <h2 class="text-3xl font-bold">Cara kerja</h2>
-        <ol class="mt-8 ml-4 space-y-8 border-l-2 border-ink-200">
-            @foreach([
-                ['Pilih tipe masalah', 'Akademik, karier, relasi, keluarga, stres, atau tipe lain yang paling dekat dengan keadaan Anda.'],
-                ['Tulis cerita singkat', 'Beberapa kalimat sudah cukup. Konselor membacanya sebelum sesi.'],
-                ['Jawab 10 pertanyaan', 'Skala 0 sampai 3 tentang dua minggu terakhir. Hasilnya gambaran awal, bukan diagnosis.'],
-                ['Pilih konselor', 'Konselor yang punya slot kosong tampil lebih dulu, lengkap dengan bidang lulusan, keahlian, dan sertifikasi.'],
-                ['Pilih tanggal dan jam', 'Kalender menandai tanggal kosong, sebagian terisi, atau penuh. Sesi paling awal adalah besok.'],
-            ] as $i => [$t, $d])
-                <li class="relative pl-8">
-                    <span class="absolute -left-[17px] top-0 grid h-8 w-8 place-items-center rounded-full bg-ink-800 font-display text-sm font-bold text-white">{{ $i + 1 }}</span>
-                    <h3 class="text-lg font-bold">{{ $t }}</h3>
-                    <p class="mt-1 max-w-lg text-slate-600">{{ $d }}</p>
-                    @if($i === 0)<a href="{{ route('student.booking.start') }}" class="btn btn-primary mt-3">Isi data awal</a>@endif
-                </li>
-            @endforeach
-        </ol>
+<section id="bergabung" class="mt-20 scroll-mt-24" aria-labelledby="bergabung-title">
+    <div class="mx-auto max-w-2xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-ink-600">Mari mulai dari sini</p>
+        <h2 id="bergabung-title" class="mt-3 text-3xl font-bold md:text-4xl">Pilih cara kamu ingin hadir</h2>
+        <p class="mt-4 leading-relaxed text-slate-600">Baik sedang mencari ruang bercerita maupun ingin mendampingi orang lain, ada tempat untukmu.</p>
     </div>
 
-    <div class="md:col-span-5">
-        <div class="rounded-3xl border border-ink-100 bg-white md:sticky md:top-24">
-            <div class="p-6">
-                <h3 class="text-lg font-bold">Mahasiswa</h3>
-                <p class="mt-2 text-sm leading-relaxed text-slate-600">Membuat sesi, melihat profil dan rating konselor, membatalkan sesi yang belum berjalan, dan memberi rating setelah sesi selesai.</p>
-                <a class="mt-3 inline-block text-sm font-semibold text-ink-700 underline underline-offset-4" href="{{ route('register.student') }}">Daftar sebagai mahasiswa</a>
-            </div>
-            <div class="border-t border-ink-100 p-6">
-                <h3 class="text-lg font-bold">Konselor</h3>
-                <p class="mt-2 text-sm leading-relaxed text-slate-600">Mendaftar dengan bidang lulusan, keahlian, dan sertifikasi; mengatur slot mingguan; membaca cerita dan hasil kuesioner; lalu mengonfirmasi, menolak, atau menandai sesi selesai.</p>
-                <a class="mt-3 inline-block text-sm font-semibold text-ink-700 underline underline-offset-4" href="{{ route('register.counselor') }}">Daftar sebagai konselor</a>
-            </div>
-            <div class="border-t border-ink-100 p-6">
-                <h3 class="text-lg font-bold">Admin</h3>
-                <p class="mt-2 text-sm leading-relaxed text-slate-600">Memeriksa pendaftar konselor, mengaktifkan atau menonaktifkan akun, mengelola tipe masalah, dan melihat ringkasan sesi.</p>
-            </div>
-        </div>
-    </div>
-</section>
+    <br>
 
-{{-- Kuesioner dan batasan --}}
-<section class="mt-20 grid gap-8 rounded-[2rem] bg-ink-50 p-8 md:grid-cols-2 md:p-12">
-    <div>
-        <h2 class="text-2xl font-bold">Soal kuesioner</h2>
-        <p class="mt-3 leading-relaxed text-slate-700">
-            Sepuluh jawaban dijumlahkan menjadi skor 0 sampai 30 dan dikelompokkan rendah, sedang, atau tinggi. Skor ini membantu konselor menyiapkan sesi; ia tidak menggantikan pemeriksaan oleh psikolog atau dokter. Pertanyaan terakhir menyinggung pikiran menyakiti diri: bila dijawab selain "tidak pernah", permintaan Anda diberi tanda prioritas di antrean konselor.
-        </p>
-    </div>
-    <div>
-        <h2 class="text-2xl font-bold">Batasan</h2>
-        <p class="mt-3 leading-relaxed text-slate-700">
-            Situs ini mengatur jadwal dan data awal sesi. Sesi sendiri berlangsung di luar situs, sesuai kesepakatan dengan konselor. Untuk keadaan darurat, hubungi layanan darurat setempat atau orang terdekat tanpa menunggu konfirmasi jadwal.
-        </p>
+
+
+
+    <div class="mt-8 grid gap-5 md:grid-cols-2">
+        <article class="flex flex-col rounded-3xl border border-ink-100 bg-white p-7 shadow-sm md:p-9">
+            <div class="grid h-12 w-12 place-items-center rounded-2xl bg-ink-50 text-ink-700" aria-hidden="true">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8m-8 4h5m-8 6 2.4-2.4A3 3 0 0 1 9.5 17H17a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v14Z"/></svg>
+            </div>
+            <h3 class="mt-5 text-2xl font-bold">Untuk mahasiswa</h3>
+            <p class="mt-3 flex-1 leading-relaxed text-slate-600">Ingin punya ruang untuk bercerita dan mencari dukungan? Daftar sebagai mahasiswa, lalu mulai dengan langkah yang terasa nyaman bagimu.</p>
+            <a href="{{ route('register.student') }}" class="btn btn-primary mt-6 w-full">Daftar sebagai mahasiswa</a>
+        </article>
+
+        <article class="flex flex-col rounded-3xl border border-sage-200 bg-sage-50 p-7 shadow-sm md:p-9">
+            <div class="grid h-12 w-12 place-items-center rounded-2xl bg-white text-sage-800" aria-hidden="true">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.4-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.6-8 11-8 11Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h2l1.2-2.5L13 15l1.2-3H16"/></svg>
+            </div>
+            <h3 class="mt-5 text-2xl font-bold">Untuk konselor</h3>
+            <p class="mt-3 flex-1 leading-relaxed text-slate-600">Siap menjadi pendengar yang hadir dengan empati dan keahlianmu? Daftar sebagai konselor dan ikut menemani perjalanan mahasiswa.</p>
+            <a href="{{ route('register.counselor') }}" class="btn mt-6 w-full border-sage-700 bg-sage-700 text-white hover:bg-sage-800">Daftar sebagai konselor</a>
+        </article>
     </div>
 </section>
 @endsection

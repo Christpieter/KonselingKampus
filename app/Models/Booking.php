@@ -11,7 +11,7 @@ class Booking extends Model
 {
     protected $fillable = [
         'student_id', 'counselor_id', 'problem_type_id', 'story', 'answers', 'score',
-        'needs_priority', 'session_date', 'start_time', 'end_time', 'status', 'counselor_note',
+        'triage_session_id', 'needs_priority', 'session_date', 'start_time', 'end_time', 'status', 'counselor_note',
     ];
 
     /** Status yang menahan slot: slot tidak bisa dipesan orang lain. */
@@ -37,6 +37,7 @@ class Booking extends Model
     public function student(): BelongsTo { return $this->belongsTo(User::class, 'student_id'); }
     public function counselor(): BelongsTo { return $this->belongsTo(User::class, 'counselor_id'); }
     public function problemType(): BelongsTo { return $this->belongsTo(ProblemType::class); }
+    public function triageSession(): BelongsTo { return $this->belongsTo(TriageSession::class); }
     public function rating(): HasOne { return $this->hasOne(Rating::class); }
     public function messages(): HasMany { return $this->hasMany(Message::class); }
     public function report(): HasOne { return $this->hasOne(CounselingReport::class); }

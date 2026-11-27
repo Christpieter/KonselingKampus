@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\CounselorProfile;
 use App\Models\CounselingReport;
 use App\Models\ProblemType;
+use App\Models\TriageSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -50,7 +51,10 @@ class CounselingReportTest extends TestCase
             && $request->hasHeader('X-Webhook-Secret', 'test-webhook-secret')
             && $request['report_id'] === $report->id
             && $request['report']['student']['name'] === $booking->student->name
-            && $request['report']['session']['counselor_note'] === 'Catatan sesi privat');
+            && $request['report']['session']['counselor_note'] === 'Catatan sesi privat'
+            && $request['report']['triage']['conversation'][1]['speaker'] === 'Mahasiswa'
+            && $request['report']['triage']['conversation'][1]['message'] === 'Saya merasa cemas saat kuliah.'
+            && ! array_key_exists('answers', $request['report']['triage']));
     }
 
     public function test_n8n_callback_stores_pdf_and_only_the_counselor_can_download_it(): void
@@ -131,6 +135,16 @@ class CounselingReportTest extends TestCase
             'status' => 'completed',
             'counselor_note' => 'Catatan sesi privat',
         ]);
+        $triage = TriageSession::create([
+            'student_id' => $student->id,
+            'answers' => [1, 2],
+            'conversation_log' => [
+                ['role' => 'assistant', 'content' => 'Apa yang sedang kamu rasakan?'],
+                ['role' => 'user', 'content' => 'Saya merasa cemas saat kuliah.'],
+            ],
+            'status' => 'completed',
+        ]);
+        $booking->update(['triage_session_id' => $triage->id]);
 
         return [$counselor, $booking];
     }

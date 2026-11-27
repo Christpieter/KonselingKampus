@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\CounselingReport;
-use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -167,9 +166,19 @@ class CounselingReportController extends Controller
 
     private function reportPayload(Booking $booking): array
     {
-        $answers = $booking->answers ?? [];
-        $answerIsList = array_is_list($answers);
-        $answerLabels = ['Tidak pernah', 'Beberapa hari', 'Lebih dari separuh hari', 'Hampir setiap hari'];
+        $booking->loadMissing(['student', 'counselor', 'problemType', 'triageSession']);
+        $triage = $booking->triageSession;
+        $conversation = collect($triage?->conversation_log ?? [])
+            ->filter(fn ($entry) => is_array($entry)
+                && in_array($entry['role'] ?? '', ['user', 'assistant'], true)
+                && filled($entry['content'] ?? null))
+            ->map(fn (array $entry) => [
+                'speaker' => $entry['role'] === 'user' ? 'Mahasiswa' : 'Asisten triage',
+                'message' => (string) $entry['content'],
+                'timestamp' => $entry['timestamp'] ?? null,
+            ])
+            ->values()
+            ->all();
 
         return [
             'session' => [
@@ -195,18 +204,13 @@ class CounselingReportController extends Controller
                 'total_score' => $booking->score,
                 'score_level' => Booking::scoreLevel($booking->score),
                 'needs_priority' => $booking->needs_priority,
-                'answers' => Question::orderBy('position')->get()->map(function (Question $question, int $index) use ($answers, $answerIsList, $answerLabels) {
-                    $answer = $answerIsList
-                        ? ($answers[$index] ?? null)
-                        : ($answers[$question->id] ?? null);
-
-                    return [
-                        'position' => $question->position,
-                        'question' => $question->text,
-                        'answer' => $answer,
-                        'answer_label' => is_numeric($answer) ? ($answerLabels[(int) $answer] ?? null) : null,
-                    ];
-                })->values()->all(),
+                'anxiety_score' => $triage?->anxiety_score,
+                'anxiety_level' => $triage?->levelLabel('anxiety'),
+                'depression_score' => $triage?->depression_score,
+                'depression_level' => $triage?->levelLabel('depression'),
+                'stress_score' => $triage?->stress_score,
+                'stress_level' => $triage?->levelLabel('stress'),
+                'conversation' => $conversation,
             ],
         ];
     }

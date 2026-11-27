@@ -15,7 +15,6 @@ class PublicController extends Controller
     {
         $total = Booking::count();
         $byStatus = Booking::selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
-
         $byType = Booking::join('problem_types', 'problem_types.id', '=', 'bookings.problem_type_id')
             ->selectRaw('problem_types.name as name, count(*) as total')
             ->groupBy('problem_types.name')->orderByDesc('total')->limit(6)->get();
@@ -28,7 +27,6 @@ class PublicController extends Controller
             'total' => $total,
             'byStatus' => $byStatus,
             'byType' => $byType,
-            'topCounselors' => CounselorProfile::approved()->with('user')->latest()->take(3)->get(),
         ]);
     }
 

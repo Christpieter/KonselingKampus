@@ -7,7 +7,6 @@ use App\Models\Booking;
 use App\Models\CounselorProfile;
 use App\Models\Message;
 use App\Models\ProblemType;
-use App\Models\Question;
 use App\Models\Rating;
 use App\Models\TriageSession;
 use App\Services\ScheduleService;
@@ -100,32 +99,23 @@ class StudentController extends Controller
     {
         return view('student.intake', [
             'types' => ProblemType::orderBy('name')->get(),
-            'questions' => Question::orderBy('position')->get(),
             'draft' => session('booking_draft', []),
         ]);
     }
 
     public function saveIntake(Request $request)
     {
-        $questions = Question::orderBy('position')->get();
-
-        $rules = [
+        $data = $request->validate([
             'problem_type_id' => ['required', 'exists:problem_types,id'],
             'story' => ['required', 'string', 'min:30', 'max:1500'],
-        ];
-        foreach ($questions as $q) {
-            $rules["answers.{$q->id}"] = ['required', 'integer', 'between:0,3'];
-        }
-
-        $data = $request->validate($rules, [
+        ], [
             'story.min' => 'Ceritakan sedikit lebih panjang, minimal 30 karakter.',
-            'answers.*.required' => 'Ada pertanyaan kuesioner yang belum dijawab.',
         ]);
 
         $draft = session('booking_draft', []);
         $draft['problem_type_id'] = (int) $data['problem_type_id'];
         $draft['story'] = $data['story'];
-        $draft['answers'] = array_map('intval', $data['answers']);
+        unset($draft['answers']);
         session(['booking_draft' => $draft]);
 
         return isset($draft['counselor_id'])
@@ -227,13 +217,14 @@ class StudentController extends Controller
             throw ValidationException::withMessages(['tanggal' => 'Sesi paling awal bisa dipesan untuk besok.']);
         }
 
-        // Use triage scores if available, otherwise fall back to intake answers
-        $triage = null;
-        if (! empty($draft['triage_session_id'])) {
-            $triage = TriageSession::where('id', $draft['triage_session_id'])
-                ->where('student_id', auth()->id())
-                ->where('status', 'completed')
-                ->first();
+        $triage = TriageSession::where('id', $draft['triage_session_id'] ?? null)
+            ->where('student_id', auth()->id())
+            ->where('status', 'completed')
+            ->first();
+
+        if (! $triage) {
+            return redirect()->route('student.triage.index')
+                ->with('err', 'Silakan selesaikan triage kembali sebelum membuat janji konseling.');
         }
 
         $booking = DB::transaction(function () use ($draft, $data, $date, $triage) {
@@ -265,27 +256,15 @@ class StudentController extends Controller
                 throw ValidationException::withMessages(['slot_id' => 'Anda sudah punya sesi pada jam yang sama.']);
             }
 
-            // Use triage data for booking
-            if ($triage) {
-                $answers = $triage->answers ?? [];
-                $score = $triage->total_score;
-                $needsPriority = $triage->needs_priority;
-            } else {
-                // Fallback to intake questionnaire (legacy)
-                $answers = $draft['answers'];
-                $score = array_sum($answers);
-                $lastQuestion = Question::orderByDesc('position')->first();
-                $needsPriority = $lastQuestion ? ($answers[$lastQuestion->id] ?? 0) >= 1 : false;
-            }
-
             return Booking::create([
                 'student_id' => auth()->id(),
+                'triage_session_id' => $triage->id,
                 'counselor_id' => $draft['counselor_id'],
                 'problem_type_id' => $draft['problem_type_id'],
                 'story' => $draft['story'],
-                'answers' => $answers,
-                'score' => $score,
-                'needs_priority' => $needsPriority,
+                'answers' => $triage->answers ?? [],
+                'score' => $triage->total_score,
+                'needs_priority' => $triage->needs_priority,
                 'session_date' => $date->toDateString(),
                 'start_time' => $slot->start_time,
                 'end_time' => $slot->end_time,
@@ -303,7 +282,7 @@ class StudentController extends Controller
     {
         $draft = session('booking_draft');
 
-        if (empty($draft['problem_type_id']) || empty($draft['answers'])) {
+        if (empty($draft['problem_type_id']) || empty($draft['story'])) {
             abort(redirect()->route('student.booking.intake'));
         }
 

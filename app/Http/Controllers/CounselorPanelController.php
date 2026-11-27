@@ -31,7 +31,7 @@ class CounselorPanelController extends Controller
     public function show(Booking $booking)
     {
         $this->own($booking);
-        $booking->load(['student', 'problemType', 'rating', 'report']);
+        $booking->load(['student', 'problemType', 'rating', 'report', 'triageSession']);
 
         return view('counselor.booking', [
             'booking' => $booking,

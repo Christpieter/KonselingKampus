@@ -13,13 +13,38 @@
                 <span class="badge bg-slate-100 text-slate-700">{{ $booking->statusLabel() }}</span>
             </div>
             @if($booking->needs_priority)
-                <p class="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800">Mahasiswa menjawab pertanyaan 10 (pikiran menghilang atau menyakiti diri) dengan jawaban selain "tidak pernah". Pertimbangkan untuk menghubungi lebih dulu dan menjadwalkan lebih cepat.</p>
+                <p class="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800">Hasil triage menunjukkan sesi ini perlu mendapat perhatian prioritas. Pertimbangkan untuk menghubungi mahasiswa lebih awal.</p>
             @endif
             <h2 class="mt-5 text-sm text-slate-500">Tipe masalah</h2><p>{{ $booking->problemType->name }}</p>
             <h2 class="mt-4 text-sm text-slate-500">Cerita</h2><p class="whitespace-pre-line">{{ $booking->story }}</p>
         </div>
         <div class="card">
-            <h2 class="font-semibold">Kuesioner &middot; skor {{ $booking->score }}/30 ({{ \App\Models\Booking::scoreLevel($booking->score) }})</h2>
+            @if($booking->triageSession)
+                <h2 class="font-semibold">Ringkasan triage</h2>
+                <div class="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                    @foreach(['Kecemasan' => 'anxiety', 'Depresi' => 'depression', 'Stres' => 'stress'] as $label => $subscale)
+                        <div class="rounded-lg bg-ink-50 p-3">
+                            <p class="text-slate-500">{{ $label }}</p>
+                            <p class="font-bold">{{ $booking->triageSession->{$subscale.'_score'} }} <span class="font-normal text-slate-500">({{ $booking->triageSession->levelLabel($subscale) }})</span></p>
+                        </div>
+                    @endforeach
+                </div>
+                <h3 class="mt-5 font-semibold">Percakapan triage</h3>
+                <div class="mt-3 space-y-3">
+                    @forelse($booking->triageSession->conversation_log ?? [] as $message)
+                        @if(in_array($message['role'] ?? '', ['user', 'assistant'], true))
+                            <div class="rounded-xl {{ $message['role'] === 'user' ? 'bg-ink-50' : 'bg-slate-50' }} p-3">
+                                <p class="text-xs font-semibold text-slate-500">{{ $message['role'] === 'user' ? 'Mahasiswa' : 'Asisten triage' }}</p>
+                                <p class="mt-1 whitespace-pre-line text-sm">{{ $message['content'] ?? '' }}</p>
+                            </div>
+                        @endif
+                    @empty
+                        <p class="text-sm text-slate-500">Percakapan triage tidak tersedia.</p>
+                    @endforelse
+                </div>
+                <p class="mt-3 text-xs text-slate-500">Hasil triage merupakan gambaran awal, bukan diagnosis.</p>
+            @else
+            <h2 class="font-semibold">Kuesioner lama &middot; skor {{ $booking->score }}/30 ({{ \App\Models\Booking::scoreLevel($booking->score) }})</h2>
             @php
                 $answers = $booking->answers ?? [];
                 $answerIsList = array_is_list($answers);
@@ -36,6 +61,7 @@
                 @endforeach
             </table>
             <p class="mt-3 text-xs text-slate-500">Skor ini gambaran awal, bukan diagnosis.</p>
+            @endif
         </div>
     </div>
 

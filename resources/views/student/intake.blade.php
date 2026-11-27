@@ -52,27 +52,9 @@
             <textarea name="story" rows="6" maxlength="1500" class="input" required>{{ old('story', $draft['story'] ?? '') }}</textarea>
         </div>
 
-        <div class="card">
-            <h2 class="mb-1 font-semibold">3. Kuesioner</h2>
-            <p class="mb-4 text-sm text-slate-500">Seberapa sering hal berikut terjadi dalam dua minggu terakhir?</p>
-            <div class="space-y-5">
-                @foreach($questions as $q)
-                    <fieldset>
-                        <legend class="mb-2 text-sm font-medium">{{ $q->position }}. {{ $q->text }}</legend>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach([0 => 'Tidak pernah', 1 => 'Beberapa hari', 2 => 'Lebih dari separuh hari', 3 => 'Hampir setiap hari'] as $v => $label)
-                                <label class="cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-sm has-[:checked]:border-ink-600 has-[:checked]:bg-ink-50">
-                                    <input type="radio" class="mr-1" name="answers[{{ $q->id }}]" value="{{ $v }}" @checked((string) old("answers.{$q->id}", $draft['answers'][$q->id] ?? '') === (string) $v) required> {{ $label }}
-                                </label>
-                            @endforeach
-                        </div>
-                    </fieldset>
-                @endforeach
-            </div>
-            <p class="mt-5 rounded-lg bg-butter-50 p-3 text-sm text-butter-900">
-                Bila saat ini Anda merasa dalam bahaya, hubungi layanan darurat setempat atau orang terdekat sekarang, tanpa menunggu jadwal konseling.
-            </p>
-        </div>
+        <p class="rounded-lg bg-butter-50 p-3 text-sm text-butter-900">
+            Bila saat ini Anda merasa dalam bahaya, hubungi layanan darurat setempat atau orang terdekat sekarang, tanpa menunggu jadwal konseling.
+        </p>
 
         <button class="btn btn-primary">Lanjut</button>
     </form>
